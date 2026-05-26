@@ -1,0 +1,26 @@
+order_id,order_date,city,category,sub_category,quantity,unit_price,total_sales,payment_method,outlet_type,customer_type,delivery_status,delivery_time_mins,return_flag
+ORD0001,2025-04-01,Delhi,Fruits & Vegetables,Tomato,3,25,75,UPI,Dark Store,New,On-time,18,No
+ORD0002,2025-04-01,Mumbai,Snacks & Branded Foods,Biscuits,2,45,90,Card,Warehouse,Repeat,On-time,22,No
+ORD0003,2025-04-01,Bangalore,Dairy Bread & Eggs,Milk,4,60,240,UPI,Dark Store,Loyal,On-time,15,No
+ORD0004,2025-04-01,Hyderabad,Beverages,Cold Drinks,5,40,200,COD,Partner Store,New,Delayed,35,No
+ORD0005,2025-04-01,Pune,Household Essentials,Detergent,1,120,120,Wallet,Dark Store,Repeat,On-time,20,No
+ORD0006,2025-04-01,Kolkata,Personal Care,Shampoo,2,90,180,UPI,Warehouse,New,On-time,25,No
+ORD0007,2025-04-01,Chennai,Fruits & Vegetables,Potato,6,20,120,Net Banking,Dark Store,Loyal,On-time,19,No
+ORD0008,2025-04-02,Delhi,Snacks & Branded Foods,Chips,3,35,105,UPI,Dark Store,Repeat,On-time,17,No
+ORD0009,2025-04-02,Mumbai,Fruits & Vegetables,Banana,8,15,120,Card,Warehouse,New,Delayed,38,No
+ORD0010,2025-04-02,Bangalore,Dairy Bread & Eggs,Bread,2,50,100,UPI,Dark Store,Repeat,On-time,21,No
+ORD0011,2025-04-02,Hyderabad,Beverages,Juice,3,65,195,COD,Partner Store,Loyal,On-time,24,No
+ORD0012,2025-04-02,Pune,Fruits & Vegetables,Onion,5,18,90,UPI,Dark Store,New,On-time,16,No
+ORD0013,2025-04-03,Delhi,Dairy Bread & Eggs,Eggs,12,8,96,Wallet,Warehouse,Repeat,On-time,20,No
+ORD0014,2025-04-03,Mumbai,Household Essentials,Floor Cleaner,2,85,170,UPI,Dark Store,New,On-time,22,No
+ORD0015,2025-04-03,Bangalore,Snacks & Branded Foods,Namkeen,4,55,220,Card,Dark Store,Loyal,Delayed,40,Yes
+ORD0016,2025-04-04,Chennai,Fruits & Vegetables,Apple,5,80,400,UPI,Dark Store,Repeat,On-time,18,No
+ORD0017,2025-04-04,Kolkata,Beverages,Tea,2,120,240,COD,Warehouse,New,On-time,26,No
+ORD0018,2025-04-04,Delhi,Fruits & Vegetables,Rice,10,55,550,UPI,Dark Store,Loyal,On-time,15,No
+ORD0019,2025-04-05,Mumbai,Personal Care,Face Wash,1,150,150,Card,Dark Store,Repeat,On-time,19,No
+ORD0020,2025-04-05,Hyderabad,Snacks & Branded Foods,Noodles,6,40,240,UPI,Dark Store,New,On-time,21,No
+ORD0021,2025-04-06,Pune,Dairy Bread & Eggs,Butter,2,75,150,Wallet,Partner Store,Loyal,On-time,23,No
+ORD0022,2025-04-06,Bangalore,Fruits & Vegetables,Grapes,3,95,285,UPI,Dark Store,Repeat,Delayed,42,No
+ORD0023,2025-04-07,Delhi,Household Essentials,Soap,5,35,175,COD,Warehouse,New,On-time,28,No
+ORD0024,2025-04-07,Chennai,Beverages,Coffee,2,180,360,UPI,Dark Store,Loyal,On-time,17,No
+ORD0025,2025-04-08,Mumbai,Fruits & Vegetables,Mango,4,70,280,Card,Dark Store,Repeat,On-time,20,No
