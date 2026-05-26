@@ -159,7 +159,6 @@ Dark Store · Warehouse · Partner Store revenue contribution.
 
 ## 🤝 Connect
 
-If you found this project useful, feel free to ⭐ star the repo and share it!
 
 Built with ❤️ as a Data Analytics Portfolio Project.
 
