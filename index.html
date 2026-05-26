@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blinkit Grocery Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:       #0C831F;
+    --green-light: #1DAF35;
+    --green-bg:    #E8F5EA;
+    --yellow:      #F9C23C;
+    --yellow-bg:   #FEF9EC;
+    --orange:      #F97316;
+    --blue:        #3B82F6;
+    --blue-bg:     #EFF6FF;
+    --purple:      #8B5CF6;
+    --purple-bg:   #F5F3FF;
+    --red:         #EF4444;
+    --red-bg:      #FEF2F2;
+    --teal:        #14B8A6;
+    --sidebar:     #111827;
+    --sidebar-txt: #9CA3AF;
+    --bg:          #F3F4F6;
+    --card:        #FFFFFF;
+    --border:      #E5E7EB;
+    --txt-primary: #111827;
+    --txt-muted:   #6B7280;
+    --txt-light:   #9CA3AF;
+    --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md:   0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.06);
+    --radius:      12px;
+    --radius-sm:   8px;
+  }
+
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--txt-primary); display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; min-height: 100vh; background: var(--sidebar);
+    display: flex; flex-direction: column; position: fixed; left: 0; top: 0; z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 20px 18px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .logo-mark { display: flex; align-items: center; gap: 8px; }
+  .logo-icon {
+    width: 36px; height: 36px; background: var(--yellow); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; color: #000;
+  }
+  .logo-text { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 10px; color: var(--sidebar-txt); margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; cursor: pointer;
+    color: var(--sidebar-txt); font-size: 13px; font-weight: 500;
+    transition: all .15s; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .nav-item.active { background: var(--green); color: #fff; }
+  .nav-item svg { flex-shrink: 0; opacity: .8; }
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-footer { padding: 12px 14px; border-top: 1px solid rgba(255,255,255,.06); }
+  .refresh-info { font-size: 10px; color: var(--sidebar-txt); line-height: 1.6; }
+  .refresh-info strong { color: #fff; display: block; font-size: 11px; }
+
+  /* ── MAIN ── */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 14px 24px; display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .page-title { flex: 1; }
+  .page-title h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+  .page-title h1 span { color: var(--green); }
+  .page-title p { font-size: 11.5px; color: var(--txt-muted); margin-top: 1px; }
+
+  .topbar-filters { display: flex; align-items: center; gap: 10px; }
+  .filter-group { display: flex; align-items: center; gap: 6px; }
+  .filter-label { font-size: 11px; color: var(--txt-muted); font-weight: 600; }
+  .filter-select {
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; background: var(--bg); color: var(--txt-primary);
+    cursor: pointer; outline: none;
+  }
+  .date-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 12px; font-size: 12px; font-weight: 600;
+  }
+  .date-badge svg { color: var(--green); }
+
+  .btn-download {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--green); color: #fff;
+    border: none; border-radius: 8px; padding: 8px 14px;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: background .15s;
+  }
+  .btn-download:hover { background: var(--green-light); }
+
+  /* ── CONTENT ── */
+  .content { padding: 20px 24px; flex: 1; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px; margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 14px 14px 10px; box-shadow: var(--shadow);
+    border: 1px solid var(--border); overflow: hidden; position: relative;
+  }
+  .kpi-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .kpi-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .kpi-label { font-size: 11px; color: var(--txt-muted); font-weight: 600; line-height: 1.3; margin-bottom: 2px; }
+  .kpi-value { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+  .kpi-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 20px; margin-top: 5px;
+  }
+  .kpi-badge.up { background: var(--green-bg); color: var(--green); }
+  .kpi-badge.down { background: var(--red-bg); color: var(--red); }
+  .kpi-sparkline { height: 40px; margin: 0 -14px -10px; }
+  .kpi-sparkline canvas { width: 100% !important; }
+
+  /* ── CHARTS GRID ── */
+  .charts-row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .charts-row.three  { grid-template-columns: 1.8fr 1.3fr 1.5fr; }
+  .charts-row.two    { grid-template-columns: 1fr 1fr; }
+  .charts-row.three2 { grid-template-columns: 1fr 1fr 1fr; }
+  .charts-row.bottom { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .chart-card {
+    background: var(--card); border-radius: var(--radius); padding: 16px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--txt-primary); }
+  .chart-subtitle { font-size: 11px; color: var(--txt-muted); margin-top: 2px; }
+  .tab-group { display: flex; gap: 4px; }
+  .tab-btn {
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 5px; border: none; cursor: pointer;
+    background: transparent; color: var(--txt-muted); transition: all .15s;
+  }
+  .tab-btn.active { background: var(--green); color: #fff; }
+
+  .chart-body { position: relative; }
+  .chart-body canvas { max-height: 220px; }
+
+  /* Sales Over Time */
+  .sales-chart canvas { max-height: 200px !important; }
+
+  /* Donut wrapper */
+  .donut-wrap { display: flex; align-items: center; gap: 16px; }
+  .donut-canvas { width: 140px !important; height: 140px !important; flex-shrink: 0; }
+  .legend-list { flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-name { font-size: 11px; color: var(--txt-muted); flex: 1; }
+  .legend-pct { font-size: 11px; font-weight: 700; }
+
+  /* Horizontal bar */
+  .hbar-chart canvas { max-height: 260px !important; }
+
+  /* Heatmap */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap-table { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 10.5px; }
+  .heatmap-table th { text-align: center; color: var(--txt-muted); font-weight: 600; padding: 2px 4px; }
+  .heatmap-table td {
+    text-align: center; padding: 6px 4px; border-radius: 4px;
+    font-size: 10px; font-weight: 600; cursor: default;
+    transition: transform .1s;
+  }
+  .heatmap-table td:hover { transform: scale(1.08); }
+  .heatmap-city { text-align: left !important; background: transparent !important; color: var(--txt-primary); font-weight: 700; padding-right: 8px !important; }
+  .hm-legend { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .hm-legend span { font-size: 10px; color: var(--txt-muted); }
+  .hm-scale { display: flex; gap: 3px; }
+  .hm-scale div { width: 18px; height: 10px; border-radius: 3px; }
+
+  /* Delivery Performance */
+  .delivery-chart canvas { max-height: 180px !important; }
+
+  /* Customer Seg */
+  .seg-donut { width: 110px !important; height: 110px !important; flex-shrink: 0; }
+
+  /* Key Insights */
+  .insights-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #bbf7d0;
+  }
+  .insights-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .insights-icon { font-size: 20px; }
+  .insights-title { font-size: 13px; font-weight: 800; color: var(--green); }
+  .insight-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 9px; }
+  .insight-check { color: var(--green); font-size: 14px; font-weight: 800; flex-shrink: 0; line-height: 1.4; }
+  .insight-text { font-size: 11.5px; color: var(--txt-primary); font-weight: 500; line-height: 1.5; }
+
+  /* Sales vs prev */
+  .growth-big { font-size: 36px; font-weight: 800; color: var(--green); letter-spacing: -1px; }
+  .growth-label { font-size: 12px; font-weight: 700; color: var(--txt-primary); margin-top: 2px; }
+  .growth-sub { font-size: 10.5px; color: var(--txt-muted); margin-top: 2px; }
+  .mini-bar-wrap { margin-top: 10px; }
+  .mini-bar-track { background: var(--border); border-radius: 4px; height: 6px; margin-bottom: 5px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; background: var(--green); border-radius: 4px; }
+  .mini-bar-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--txt-muted); margin-bottom: 6px; }
+
+  /* Responsive tweaks */
+  @media (max-width: 1280px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .charts-row.three { grid-template-columns: 1fr; }
+    .charts-row.three2 { grid-template-columns: 1fr 1fr; }
+    .charts-row.bottom { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">B</div>
+      <div>
+        <div class="logo-text">blinkit</div>
+        <div class="logo-sub">Grocery Dashboard</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      Overview
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Sales Analysis
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Customer Insights
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Order Insights
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Product Analysis
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Delivery Performance
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Payments & Revenue
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Returns & Cancellations
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Customer Feedback
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Inventory Insights
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Marketing Insights
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Trends & Forecasting
+    </div>
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Data Quality
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="refresh-info">
+      Data Last Refreshed
+      <strong>19 May 2025 02:00 PM</strong>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="page-title">
+      <h1><span>Blinkit</span> Grocery Dashboard</h1>
+      <p>Real-time overview of sales, orders, customers &amp; delivery performance.</p>
+    </div>
+    <div class="topbar-filters">
+      <div class="date-badge">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        1 Apr 2025 &mdash; 19 May 2025
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Category</span>
+        <select class="filter-select" id="filterCategory">
+          <option>All</option>
+          <option>Fruits &amp; Vegetables</option>
+          <option>Snacks &amp; Branded Foods</option>
+          <option>Dairy Bread &amp; Eggs</option>
+          <option>Beverages</option>
+          <option>Household Essentials</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Outlet Type</span>
+        <select class="filter-select" id="filterOutlet">
+          <option>All</option>
+          <option>Dark Store</option>
+          <option>Warehouse</option>
+          <option>Partner Store</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">City</span>
+        <select class="filter-select" id="filterCity">
+          <option>All</option>
+          <option>Mumbai</option>
+          <option>Delhi</option>
+          <option>Bangalore</option>
+          <option>Hyderabad</option>
+          <option>Pune</option>
+          <option>Kolkata</option>
+          <option>Chennai</option>
+        </select>
+      </div>
+      <button class="btn-download">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Report
+      </button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:#e8f5ea"><span>💰</span></div>
+          <div>
+            <div class="kpi-label">Total Sales</div>
+            <div class="kpi-value" style="color:var(--green)">₹14.32 Cr</div>
+          </div>
+        </div>
+        <span class="kpi-badge up">▲ 18.6% vs Previous Month</span>
+        <div class="kpi-sparkline"><canvas id="spark1"></canvas></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:#fef9ec"><span>📦</span></div>
+          <div>
+            <div class="kpi-label">Total Orders</div>
+            <div class="kpi-value" style="color:var(--yellow)">14.80 Lakh</div>
+          </div>
+        </div>
+        <span class="kpi-badge up">▲ 16.3% vs Previous Month</span>
+        <div class="kpi-sparkline"><canvas id="spark2"></canvas></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:#eff6ff"><span>👥</span></div>
+          <div>
+            <div class="kpi-label">Total Customers</div>
+            <div class="kpi-value" style="color:var(--blue)">4.35 Lakh</div>
+          </div>
+        </div>
+        <span class="kpi-badge up">▲ 20.1% vs Previous Month</span>
+        <div class="kpi-sparkline"><canvas id="spark3"></canvas></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:#f5f3ff"><span>🛒</span></div>
+          <div>
+            <div class="kpi-label">Average Order Value</div>
+            <div class="kpi-value" style="color:var(--purple)">₹320.49</div>
+          </div>
+        </div>
+        <span class="kpi-badge up">▲ 6.8% vs Previous Month</span>
+        <div class="kpi-sparkline"><canvas id="spark4"></canvas></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:#e0f2fe"><span>🚀</span></div>
+          <div>
+            <div class="kpi-label">On-time Delivery</div>
+            <div class="kpi-value" style="color:#0284c7">96.7%</div>
+          </div>
+        </div>
+        <span class="kpi-badge up">▲ 3.2% vs Previous Month</span>
+        <div class="kpi-sparkline"><canvas id="spark5"></canvas></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon" style="background:#fef2f2"><span>↩️</span></div>
+          <div>
+            <div class="kpi-label">Return Rate</div>
+            <div class="kpi-value" style="color:var(--red)">2.35%</div>
+          </div>
+        </div>
+        <span class="kpi-badge down">▼ 0.4% vs Previous Month</span>
+        <div class="kpi-sparkline"><canvas id="spark6"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ROW 1: Sales Over Time | Sales by Category | Top Sub-Categories -->
+    <div class="charts-row three">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Sales Over Time</div>
+            <div class="chart-subtitle">Sales (₹) — Apr 1 to May 19</div>
+          </div>
+          <div class="tab-group">
+            <button class="tab-btn active" onclick="switchTab(this,'daily')">Daily</button>
+            <button class="tab-btn" onclick="switchTab(this,'weekly')">Weekly</button>
+            <button class="tab-btn" onclick="switchTab(this,'monthly')">Monthly</button>
+          </div>
+        </div>
+        <div class="chart-body sales-chart"><canvas id="salesChart"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Sales by Category</div>
+        </div>
+        <div class="donut-wrap">
+          <canvas class="donut-canvas" id="categoryChart"></canvas>
+          <div class="legend-list">
+            <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div><span class="legend-name">Fruits &amp; Veg</span><span class="legend-pct" style="color:#22c55e">28.7%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div><span class="legend-name">Snacks</span><span class="legend-pct" style="color:#f97316">20.4%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#facc15"></div><span class="legend-name">Dairy &amp; Eggs</span><span class="legend-pct" style="color:#facc15">15.3%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div><span class="legend-name">Beverages</span><span class="legend-pct" style="color:#3b82f6">10.8%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div><span class="legend-name">HH Essentials</span><span class="legend-pct" style="color:#8b5cf6">9.6%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div><span class="legend-name">Personal Care</span><span class="legend-pct" style="color:#ec4899">6.2%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div><span class="legend-name">Others</span><span class="legend-pct" style="color:#94a3b8">8.9%</span></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:11px;font-weight:800;color:var(--txt-muted)">₹14.32 Cr Total Sales</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Top 10 Sub-Category by Sales</div>
+        </div>
+        <div class="chart-body hbar-chart"><canvas id="subCatChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: City Heatmap | Payment Method | Delivery Performance -->
+    <div class="charts-row three">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Sales by City</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:10px;color:var(--txt-muted)">Low Sales</span>
+            <div class="hm-scale" id="hmScaleBar"></div>
+            <span style="font-size:10px;color:var(--txt-muted)">High Sales</span>
+          </div>
+        </div>
+        <div class="heatmap-wrap"><table class="heatmap-table" id="heatmapTable"></table></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Orders by Payment Method</div>
+        </div>
+        <div class="donut-wrap">
+          <canvas class="donut-canvas" id="paymentChart"></canvas>
+          <div class="legend-list">
+            <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div><span class="legend-name">UPI</span><span class="legend-pct" style="color:#22c55e">49.6%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#facc15"></div><span class="legend-name">Card</span><span class="legend-pct" style="color:#facc15">22.7%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div><span class="legend-name">COD</span><span class="legend-pct" style="color:#f97316">17.5%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div><span class="legend-name">Wallet</span><span class="legend-pct" style="color:#3b82f6">6.1%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div><span class="legend-name">Net Banking</span><span class="legend-pct" style="color:#94a3b8">4.1%</span></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:11px;font-weight:800;color:var(--txt-muted)">14.80 Lakh Total Orders</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Delivery Performance Over Time</div>
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:10px;font-size:11px;">
+          <span style="display:flex;align-items:center;gap:5px;font-weight:600;color:#22c55e">
+            <span style="width:14px;height:3px;background:#22c55e;border-radius:2px;display:inline-block"></span> On-time Delivery (%)
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;font-weight:600;color:var(--red)">
+            <span style="width:14px;height:3px;background:var(--red);border-radius:2px;display:inline-block"></span> Delayed Delivery (%)
+          </span>
+        </div>
+        <div class="chart-body delivery-chart"><canvas id="deliveryChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Seg | Outlet | Sales vs Prev | Insights -->
+    <div class="charts-row bottom">
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Customer Segmentation</div></div>
+        <div class="donut-wrap" style="gap:12px">
+          <canvas class="seg-donut" id="segChart"></canvas>
+          <div class="legend-list">
+            <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div><span class="legend-name">New Customers</span><span class="legend-pct" style="color:#22c55e">36.4%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#facc15"></div><span class="legend-name">Repeat Customers</span><span class="legend-pct" style="color:#facc15">46.7%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div><span class="legend-name">Loyal Customers</span><span class="legend-pct" style="color:#f97316">16.9%</span></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:11px;font-weight:800;color:var(--txt-muted)">4.35 Lakh Total Customers</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Revenue by Outlet Type</div></div>
+        <div class="donut-wrap" style="gap:12px">
+          <canvas class="seg-donut" id="outletChart"></canvas>
+          <div class="legend-list">
+            <div class="legend-item"><div class="legend-dot" style="background:#1e40af"></div><span class="legend-name">Dark Store</span><span class="legend-pct" style="color:#1e40af">62.3%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div><span class="legend-name">Warehouse</span><span class="legend-pct" style="color:#22c55e">24.8%</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div><span class="legend-name">Partner Store</span><span class="legend-pct" style="color:#f97316">12.9%</span></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:11px;font-weight:800;color:var(--txt-muted)">₹14.32 Cr Total Sales</div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header"><div class="chart-title">Sales vs Previous Month</div></div>
+        <div class="growth-big">18.6%</div>
+        <div class="growth-label">Sales Growth</div>
+        <div class="growth-sub">vs 01 Mar 2025 – 31 Mar 2025</div>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-label"><span>Orders</span><span>+16.3%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:82%"></div></div>
+          <div class="mini-bar-label"><span>Customers</span><span>+20.1%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:75%"></div></div>
+          <div class="mini-bar-label"><span>AOV</span><span>+6.8%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:50%"></div></div>
+          <div class="mini-bar-label"><span>Delivery Rate</span><span>+3.2%</span></div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:40%"></div></div>
+        </div>
+      </div>
+
+      <div class="chart-card insights-card">
+        <div class="insights-header">
+          <span class="insights-icon">💡</span>
+          <span class="insights-title">Key Insights</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-check">✓</span>
+          <span class="insight-text">Sales increased by <strong>18.6%</strong> compared to last month.</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-check">✓</span>
+          <span class="insight-text"><strong>Fruits &amp; Vegetables</strong> is the top performing category.</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-check">✓</span>
+          <span class="insight-text"><strong>UPI</strong> is the most preferred payment method.</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-check">✓</span>
+          <span class="insight-text">On-time delivery performance improved by <strong>3.2%</strong>.</span>
+        </div>
+        <div class="insight-item">
+          <span class="insight-check">✓</span>
+          <span class="insight-text"><strong>Repeat customers</strong> drive 46.7% of total orders.</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── HELPER ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const FONT = "'Plus Jakarta Sans', sans-serif";
+Chart.defaults.font.family = FONT;
+
+function sparkline(id, data, color) {
+  new Chart($(id), {
+    type: 'line',
+    data: {
+      labels: data.map((_,i)=>i),
+      datasets: [{ data, borderColor: color, borderWidth: 1.8,
+        fill: true,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,40);
+          g.addColorStop(0, color+'55'); g.addColorStop(1, color+'00'); return g;
+        },
+        tension: 0.4, pointRadius: 0 }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}, animation:false, responsive:true, maintainAspectRatio:false }
+  });
+}
+
+// ── SPARKLINES ───────────────────────────────────────────────
+const S = (min,max,n=18) => Array.from({length:n},()=>Math.round(min+Math.random()*(max-min)));
+sparkline('spark1', S(40,80), '#22c55e');
+sparkline('spark2', S(50,90), '#f9c23c');
+sparkline('spark3', S(30,70), '#3b82f6');
+sparkline('spark4', S(60,85), '#8b5cf6');
+sparkline('spark5', S(88,100), '#0284c7');
+sparkline('spark6', S(1,5),   '#ef4444');
+
+// ── SALES OVER TIME ──────────────────────────────────────────
+const dateLabels = ['Apr 01','Apr 08','Apr 15','Apr 22','Apr 29','May 06','May 13'];
+const dailyData  = [42,55,48,70,65,80,72,60,85,90,78,95,88,100,92,110,105,98,115];
+const weeklyData = [310,420,550,480,610,720,590];
+const salesCtx   = $('salesChart').getContext('2d');
+const grad = salesCtx.createLinearGradient(0,0,0,200);
+grad.addColorStop(0,'#22c55e55'); grad.addColorStop(1,'#22c55e00');
+
+let salesChart = new Chart(salesCtx, {
+  type:'line',
+  data:{
+    labels:['Apr 01','Apr 03','Apr 05','Apr 07','Apr 09','Apr 11','Apr 13','Apr 15','Apr 17','Apr 19','Apr 21','Apr 23','Apr 25','Apr 27','Apr 29','May 02','May 06','May 10','May 13'],
+    datasets:[{
+      label:'Sales (₹L)', data:dailyData,
+      borderColor:'#22c55e', borderWidth:2, fill:true,
+      backgroundColor:grad, tension:0.4, pointRadius:2,
+      pointBackgroundColor:'#22c55e'
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+v.raw+'L'}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9},maxTicksLimit:7,color:'#9ca3af'}},
+      y:{grid:{color:'#f3f4f6'},ticks:{font:{size:9},color:'#9ca3af',callback:v=>'₹'+v+'L'}}
+    },
+    responsive:true, maintainAspectRatio:false
+  }
+});
+
+function switchTab(btn, mode) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if (mode==='daily') {
+    salesChart.data.labels = ['Apr 01','Apr 03','Apr 05','Apr 07','Apr 09','Apr 11','Apr 13','Apr 15','Apr 17','Apr 19','Apr 21','Apr 23','Apr 25','Apr 27','Apr 29','May 02','May 06','May 10','May 13'];
+    salesChart.data.datasets[0].data = dailyData;
+  } else if (mode==='weekly') {
+    salesChart.data.labels = ['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6','Wk 7'];
+    salesChart.data.datasets[0].data = weeklyData;
+  } else {
+    salesChart.data.labels = ['March','April','May (partial)'];
+    salesChart.data.datasets[0].data = [1208, 1432, 480];
+  }
+  salesChart.update();
+}
+
+// ── CATEGORY DONUT ───────────────────────────────────────────
+new Chart($('categoryChart'), {
+  type:'doughnut',
+  data:{
+    labels:['Fruits & Veg','Snacks','Dairy & Eggs','Beverages','HH Essentials','Personal Care','Others'],
+    datasets:[{
+      data:[28.7,20.4,15.3,10.8,9.6,6.2,8.9],
+      backgroundColor:['#22c55e','#f97316','#facc15','#3b82f6','#8b5cf6','#ec4899','#94a3b8'],
+      borderWidth:2, borderColor:'#fff', hoverOffset:4
+    }]
+  },
+  options:{
+    cutout:'70%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.label+': '+v.raw+'%'}}},
+    responsive:false, maintainAspectRatio:false
+  }
+});
+
+// ── TOP SUB-CATEGORY HBAR ────────────────────────────────────
+new Chart($('subCatChart'), {
+  type:'bar',
+  data:{
+    labels:['Tomato','Potato','Onion','Banana','Milk','Biscuits','Bread','Apple','Rice','Eggs'],
+    datasets:[{
+      data:[45.2,38.6,34.1,29.8,27.3,22.7,19.8,18.6,16.4,14.2],
+      backgroundColor:['#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#22c55e','#facc15','#f97316'],
+      borderRadius:4
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+v.raw+' Lakh'}}},
+    scales:{
+      x:{grid:{color:'#f3f4f6'},ticks:{font:{size:9},callback:v=>v+'L',color:'#9ca3af'}},
+      y:{grid:{display:false},ticks:{font:{size:10.5},color:'#374151'}}
+    },
+    responsive:true, maintainAspectRatio:false
+  }
+});
+
+// ── HEATMAP ──────────────────────────────────────────────────
+const cities  = ['Delhi','Mumbai','Bangalore','Hyderabad','Pune','Kolkata','Chennai'];
+const weeks   = ['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5'];
+const hmData  = [
+  [62,75,80,68,72],[58,70,85,74,66],[55,68,78,82,70],[48,65,72,60,75],
+  [50,62,70,65,55],[45,58,65,60,52],[42,55,68,58,50]
+];
+const colors = ['#f0fdf4','#bbf7d0','#86efac','#4ade80','#16a34a'];
+function hmColor(v) {
+  if(v<55) return colors[0]; if(v<65) return colors[1];
+  if(v<72) return colors[2]; if(v<80) return colors[3]; return colors[4];
+}
+function hmText(v) { return v<65 ? '#374151' : '#fff'; }
+
+const tbl = $('heatmapTable');
+let thead = '<thead><tr><th></th>';
+weeks.forEach(w => thead += `<th>${w}</th>`);
+thead += '</tr></thead>';
+let tbody = '<tbody>';
+cities.forEach((c,i) => {
+  tbody += `<tr><td class="heatmap-city">${c}</td>`;
+  weeks.forEach((_,j) => {
+    const v = hmData[i][j];
+    tbody += `<td style="background:${hmColor(v)};color:${hmText(v)}">₹${v}L</td>`;
+  });
+  tbody += '</tr>';
+});
+tbody += '</tbody>';
+tbl.innerHTML = thead + tbody;
+
+// scale bar
+const sb = $('hmScaleBar');
+colors.forEach(c => { const d=document.createElement('div'); d.style.cssText=`width:18px;height:10px;border-radius:3px;background:${c}`; sb.appendChild(d); });
+
+// ── PAYMENT DONUT ─────────────────────────────────────────────
+new Chart($('paymentChart'), {
+  type:'doughnut',
+  data:{
+    labels:['UPI','Card','COD','Wallet','Net Banking'],
+    datasets:[{ data:[49.6,22.7,17.5,6.1,4.1],
+      backgroundColor:['#22c55e','#facc15','#f97316','#3b82f6','#94a3b8'],
+      borderWidth:2, borderColor:'#fff', hoverOffset:4 }]
+  },
+  options:{
+    cutout:'70%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.label+': '+v.raw+'%'}}},
+    responsive:false, maintainAspectRatio:false
+  }
+});
+
+// ── DELIVERY PERFORMANCE ─────────────────────────────────────
+new Chart($('deliveryChart'), {
+  type:'line',
+  data:{
+    labels:['Apr 01','Apr 08','Apr 15','Apr 22','Apr 29','May 06','May 13'],
+    datasets:[
+      { label:'On-time (%)', data:[95.2,96.1,96.8,97.2,96.5,97.0,97.8],
+        borderColor:'#22c55e', borderWidth:2, fill:false, tension:0.4,
+        pointRadius:3, pointBackgroundColor:'#22c55e' },
+      { label:'Delayed (%)', data:[4.8,3.9,3.2,2.8,3.5,3.0,2.2],
+        borderColor:'#ef4444', borderWidth:2, fill:false, tension:0.4,
+        pointRadius:3, pointBackgroundColor:'#ef4444' }
+    ]
+  },
+  options:{
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9},color:'#9ca3af'}},
+      y:{min:0,max:100,grid:{color:'#f3f4f6'},ticks:{font:{size:9},color:'#9ca3af',callback:v=>v+'%'}}
+    },
+    responsive:true, maintainAspectRatio:false
+  }
+});
+
+// ── CUSTOMER SEGMENTATION ─────────────────────────────────────
+new Chart($('segChart'), {
+  type:'doughnut',
+  data:{
+    labels:['New','Repeat','Loyal'],
+    datasets:[{ data:[36.4,46.7,16.9],
+      backgroundColor:['#22c55e','#facc15','#f97316'],
+      borderWidth:2, borderColor:'#fff', hoverOffset:4 }]
+  },
+  options:{
+    cutout:'65%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.label+': '+v.raw+'%'}}},
+    responsive:false, maintainAspectRatio:false
+  }
+});
+
+// ── OUTLET TYPE DONUT ─────────────────────────────────────────
+new Chart($('outletChart'), {
+  type:'doughnut',
+  data:{
+    labels:['Dark Store','Warehouse','Partner Store'],
+    datasets:[{ data:[62.3,24.8,12.9],
+      backgroundColor:['#1e40af','#22c55e','#f97316'],
+      borderWidth:2, borderColor:'#fff', hoverOffset:4 }]
+  },
+  options:{
+    cutout:'65%',
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.label+': '+v.raw+'%'}}},
+    responsive:false, maintainAspectRatio:false
+  }
+});
+</script>
+</body>
+</html>
