@@ -1,6 +1,6 @@
 # 🛒 Blinkit Grocery Sales Analytics Dashboard
 
-> A modern, interactive Grocery Sales Analytics Dashboard built with HTML, CSS, JavaScript, Chart.js, SQL, and Excel — transforming raw retail data into actionable business insights.
+> A modern, interactive Grocery Sales Analytics Dashboard built with Power BI - HTML, CSS, JavaScript, Chart.js, SQL, and Excel — transforming raw retail data into actionable business insights.
 
 ![Dashboard Preview](assets/preview.png)
 
